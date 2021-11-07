@@ -1,0 +1,63 @@
+version: '3'
+
+networks: 
+  kemo: 
+
+services: 
+  nginx:
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    image: nginx:alpine
+    container_name: training_nginx
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./src:/var/www/html
+    depends_on:
+      - php
+      - composer_installation
+    ports:
+      - 80:80
+    networks:
+      - kemo
+
+  mysql: 
+    image: mysql:5.7.22
+    container_name: mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./docker/mysql:/var/lib/mysql
+      - ./docker/apptodo.sql:/docker-entrypoint-initdb.d/apptodo.sql
+    environment:
+      MYSQL_DATABASE: apptodo
+      MYSQL_USER: todos
+      MYSQL_PASSWORD: todos
+      MYSQL_ROOT_PASSWORD: todos
+    networks:
+      - kemo
+
+  php:
+    build: 
+      context: ./docker/laravel
+      dockerfile: Dockerfile
+    container_name: php
+    volumes: 
+      - ./src:/var/www/html
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mysql
+    networks:
+      - kemo
+
+  composer_installation:
+    container_name: composer_installation
+    image: composer
+    volumes:
+      - ./src:/app
+    command: composer install --ignore-platform-reqs
+    networks:
+      - kemo
