@@ -1,63 +1,60 @@
 version: '3'
 
-networks: 
-  kemo: 
+networks:
+  laravel:
 
-services: 
+services:
   nginx:
-    build:
-      context: .
-      dockerfile: ./docker/nginx/Dockerfile
-    image: nginx:alpine
-    container_name: training_nginx
-    volumes:
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./src:/var/www/html
-    depends_on:
-      - php
-      - composer_installation
-    ports:
-      - 80:80
-    networks:
-      - kemo
-
-  mysql: 
-    image: mysql:5.7.22
-    container_name: mysql
-    restart: unless-stopped
-    tty: true
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./docker/mysql:/var/lib/mysql
-      - ./docker/apptodo.sql:/docker-entrypoint-initdb.d/apptodo.sql
-    environment:
-      MYSQL_DATABASE: apptodo
-      MYSQL_USER: todos
-      MYSQL_PASSWORD: todos
-      MYSQL_ROOT_PASSWORD: todos
-    networks:
-      - kemo
-
-  php:
-    build: 
-      context: ./docker/laravel
-      dockerfile: Dockerfile
-    container_name: php
+    image: nginx:stable-alpine
+    container_name: nginx_training
+    ports: 
+      - "80:80"
     volumes: 
       - ./src:/var/www/html
-    ports:
-      - "9000:9000"
-    depends_on:
-      - mysql
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    # depends_on:
+    #   - php
+    #   - mysql 
+    #   - composer_installation
     networks:
-      - kemo
+      - laravel
 
-  composer_installation:
-    container_name: composer_installation
-    image: composer
-    volumes:
-      - ./src:/app
-    command: composer install --ignore-platform-reqs
-    networks:
-      - kemo
+  # mysql:
+  #   image: mysql:5.7.22
+  #   container_name: mysql_training
+  #   restart: always
+  #   tty: true
+  #   ports: 
+  #     - "3306:3306"
+  #   command: --default-authentication-plugin=mysql_native_password
+  #   volumes:
+  #     - ./mysql:/var/lib/mysql
+  #     - ./todo/apptodo.sql:/docker-entrypoint-initdb.d/apptodo.sql
+  #   environment: 
+  #     MYSQL_DATABASE: apptodo
+  #     MYSQL_USER: todos
+  #     MYSQL_PASSWORD: todo
+  #     MYSQL_ROOT_PASSWORD: todo
+  #   networks:
+  #     - laravel
+
+  # php:
+  #   build: 
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: php_training
+  #   volumes: 
+  #     - ./src:/var/www/html
+  #   ports:
+  #     - "9000:9000"
+  #   networks:
+  #     - laravel
+
+  # composer_installation:
+  #   container_name: composer_installation
+  #   image: composer
+  #   volumes:
+  #     - ./src:/app
+  #   command: composer install --ignore-platform-reqs
+  #   networks:
+  #     - laravel
